@@ -1,0 +1,1376 @@
+{
+  "name": "Final Project - Warning Letter",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Buatlah draf teks Surat Peringatan resmi berbahasa Indonesia berdasarkan data berikut:\n- Jenis Surat: {{ $json['SP Terbaru'] }} (Status Sebelumnya: {{ $json['SP Terakhir'] }})\n- Nama Karyawan: {{ $json[\"Nama Karyawan\"] }}\n- Jenis Pelanggaran: {{ $json[\"Jenis Pelanggaran\"] }}\n- Tanggal Kejadian: {{ $json[\"Tanggal Pelanggaran\"] }}\n- Detail Alasan: {{ $json[\"Alasan Pelanggaran\"] }}\n\nTeks harus ditulis dengan gaya bahasa formal, tegas, profesional, dan merujuk secara implisit pada kesesuaian dengan UU Ketenagakerjaan Indonesia yang berlaku. Jangan berikan teks pembuka atau penutup tambahan, langsung berikan isi draf suratnya saja.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -592,
+        336
+      ],
+      "id": "3bf1d505-ec84-4377-8660-262c20d171e7",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "formTitle": "Formulir Pengajuan Surat Peringatan (SP) Karyawan",
+        "formDescription": "Mohon isi data karyawan, kronologi kejadian, dan alasan pelanggaran secara objektif dan lengkap demi akurasi peninjauan oleh tim HR.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nama Karyawan",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Karyawan",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Jenis Pelanggaran",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Terlambat"
+                  },
+                  {
+                    "option": "Absen Tanpa Izin "
+                  },
+                  {
+                    "option": "Tidak Menyelesaikan Tugas"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Tanggal Pelanggaran",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Alasan Pelanggaran",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -1200,
+        176
+      ],
+      "id": "d496c5de-d038-4226-b6a2-b1282e022731",
+      "name": "On form submission",
+      "webhookId": "8c8bc4a7-259c-4717-8a1e-7269dd3db5a2"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        192
+      ],
+      "id": "fc3cbd5f-4233-4e3c-b88a-af0fa32fe420",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "FHnqitgXvazT3eoR",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields').item.json['Email Karyawan'] }}",
+        "subject": "=Permohonan Persetujuan {{ $('Edit Fields').item.json['SP Terbaru'] }} - {{ $('Edit Fields').item.json['Nama Karyawan'] }}",
+        "message": "=Yth. Bapak/Ibu Manajer,\n\nBersama email ini kami lampirkan draft Surat Peringatan {{ $('Edit Fields').item.json['SP Terbaru'] }}untuk karyawan berikut:\n\nNama Karyawan : {{ $('Edit Fields').item.json['Nama Karyawan'] }}\nEmail : {{ $('Edit Fields').item.json['Email Karyawan'] }}\nJenis SP : {{ $('Edit Fields').item.json['Jenis Pelanggaran'] }}\nTanggal Pengajuan : {{ $('Edit Fields').item.json['Tanggal Pelanggaran'] }}\n\nSurat telah disusun berdasarkan laporan pelanggaran yang diterima dan riwayat tindakan disipliner yang tercatat dalam sistem.\n\nMohon melakukan review terhadap dokumen terlampir. Apabila telah sesuai, mohon memberikan persetujuan dan tanda tangan sesuai prosedur perusahaan.\n\nTerima kasih atas perhatian dan kerja samanya.\n\nHormat kami,\n\nSistem Manajemen SDM\nPT. [NFA]\n",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        336
+      ],
+      "id": "9838c680-1874-4558-bc6a-44f6ec03e636",
+      "name": "Send a message",
+      "webhookId": "ea4ad125-fae2-4729-8fc9-50b0fe0c7a4e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aQ3FsuquZ3UCrWeS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "3697696a-3e5c-80a5-b8cf-f90512ab1b6c",
+          "mode": "list",
+          "cachedResultName": "SP Otomatis",
+          "cachedResultUrl": "https://www.notion.so/3697696a3e5c80a5b8cff90512ab1b6c"
+        },
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Email Karyawan|email",
+              "condition": "equals"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1024,
+        336
+      ],
+      "id": "b138c703-89a3-4f00-a58f-9b332971cf2b",
+      "name": "Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "xrVQnmvUAnKHOqBC",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        320
+      ],
+      "id": "1b31860a-9b55-4637-be6b-11616ce5f0d8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1YDz6eavEKjAHyUqsLCOvjvtvMe9v8v8jxim6zYKeNHI/edit?usp=sharing"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        48,
+        160
+      ],
+      "id": "88788d05-7944-4652-8054-f2f921e8a80a",
+      "name": "SP1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "aRwRwEDgrAcFlgUW",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "https://docs.google.com/document/d/13hHEN4FWGv_CeBAJhN413Plc_p4CS4AhBV7FgS53o1M/edit?usp=sharing",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "[Nama Lengkap Karyawan]",
+              "replaceText": "={{ $('Edit Fields').item.json['Nama Karyawan'] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        48,
+        528
+      ],
+      "id": "f932546c-0cb1-437a-bee3-dd2d72ea5f64",
+      "name": "SP3",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "aRwRwEDgrAcFlgUW",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/19BHJPpeq9TK8HARDNu5PLC1l7Vcnp7b7GGSfIY-Z66Q/edit?usp=sharing"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        48,
+        336
+      ],
+      "id": "78b1c738-b206-4f9f-8f79-66568ec0e80f",
+      "name": "SP2",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "aRwRwEDgrAcFlgUW",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0530c44-f30e-482c-9e24-6adb1322313b",
+              "name": "Nama Karyawan",
+              "value": "={{ $json.property_nama_karyawan }}",
+              "type": "string"
+            },
+            {
+              "id": "60cfe57d-6761-4272-86b9-9c1c30b4ba68",
+              "name": "Email Karyawan",
+              "value": "={{ $json.property_email_karyawan }}",
+              "type": "string"
+            },
+            {
+              "id": "6017bc6f-6289-4f83-9900-cc55847dbc29",
+              "name": "Jenis Pelanggaran",
+              "value": "={{ $json.property_jenis_pelanggaran }}",
+              "type": "string"
+            },
+            {
+              "id": "070336d0-45a2-4877-b491-4bb21e0297ce",
+              "name": "Tanggal Pelanggaran",
+              "value": "={{ $json.property_tanggal.start }}",
+              "type": "string"
+            },
+            {
+              "id": "943b9146-041d-40fe-bbc2-7a53fd9615c2",
+              "name": "Alasan Pelanggaran",
+              "value": "={{ $json.property_alasan }}",
+              "type": "string"
+            },
+            {
+              "id": "fc5173df-b141-4ca9-a6be-2326b63285ea",
+              "name": "SP Terakhir",
+              "value": "={{ $json.property_sp_terakhir }}",
+              "type": "string"
+            },
+            {
+              "id": "ec088c03-19d0-4086-8dce-baf50656cf20",
+              "name": "SP Terbaru",
+              "value": "={{ $json.property_sp_terakhir === 'SP1' ? 'SP2' : $json.property_sp_terakhir === 'SP2' ? 'SP3' : 'SP1' }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -816,
+        336
+      ],
+      "id": "81c66351-c1f0-4b7d-bd2e-397f420c8c28",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Edit Fields').item.json['SP Terakhir'] }}",
+                    "rightValue": "=Belum Pernah",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e6840d07-8697-4aea-875f-1ff28bb7a554"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "23aafb8f-1b0b-44d3-8c35-4ada7fdac258",
+                    "leftValue": "={{ $('Edit Fields').item.json['SP Terakhir'] }}",
+                    "rightValue": "=SP 1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "526dd76d-1b03-45a0-92e8-32b7ff06da79",
+                    "leftValue": "={{ $('Edit Fields').item.json['SP Terakhir'] }}",
+                    "rightValue": "=SP 2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        320
+      ],
+      "id": "74862777-8a41-4f00-9cfc-1b74251f40b3",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "3697696a3e5c80a5b8cff90512ab1b6c",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        336
+      ],
+      "id": "d9ac7c74-e153-4040-841a-d208b64261a4",
+      "name": "Update a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "xrVQnmvUAnKHOqBC",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://docs.google.com/document/d/{{$json.documentId}}/export?format=pdf",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        528,
+        336
+      ],
+      "id": "2ad08520-3056-4441-a208-6018a46614d8",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields').item.json['Email Karyawan'] }}",
+        "subject": "=Permohonan Persetujuan {{ $('Edit Fields').item.json['SP Terbaru'] }} - {{ $('Edit Fields').item.json['Nama Karyawan'] }}",
+        "message": "=Silakan lakukan review Surat Peringatan yang terlampir.\n\n<a href=\"https://n8n.company.com/webhook/sp-approve?id={{$json.id}}\">\n✅ Approve\n</a>\n\n<a href=\"https://n8n.company.com/webhook/sp-reject?id={{$json.id}}\">\n❌ Reject\n</a>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        144
+      ],
+      "id": "8052a013-10cd-48a0-99d5-cccf46d49e6c",
+      "name": "Send a message2",
+      "webhookId": "ea4ad125-fae2-4729-8fc9-50b0fe0c7a4e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aQ3FsuquZ3UCrWeS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "253b6ca9-33a1-4ded-b0e9-72c43c448be9",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1232,
+        944
+      ],
+      "id": "d81b3021-f3bb-47e9-9c99-ee41732de67f",
+      "name": "Webhook",
+      "webhookId": "253b6ca9-33a1-4ded-b0e9-72c43c448be9"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "3697696a-3e5c-80a5-b8cf-f90512ab1b6c",
+          "mode": "list",
+          "cachedResultName": "SP Otomatis",
+          "cachedResultUrl": "https://www.notion.so/3697696a3e5c80a5b8cff90512ab1b6c"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1040,
+        944
+      ],
+      "id": "ace2d4db-45cf-4c71-a547-d0e4460a0eda",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "xrVQnmvUAnKHOqBC",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9bd1a120-1301-47fe-a6a0-fbe97a9dfcfb",
+              "leftValue": "={{$json.query.action}}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "756ceb83-96a9-46c9-b2c0-1605a621a599",
+              "leftValue": "={{$json.query.action}}",
+              "rightValue": "reject",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -832,
+        944
+      ],
+      "id": "0a82a62a-dfab-4a1b-9764-78675c3741e6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        800
+      ],
+      "id": "6bbf14c6-abbb-4f1f-bab7-319b5fe8ded5",
+      "name": "Send a message1",
+      "webhookId": "2d8d1c0e-1362-4a82-8c7f-b19a5f68e6a4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aQ3FsuquZ3UCrWeS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -416,
+        800
+      ],
+      "id": "c5e09390-2585-4936-a0d2-ef770b240076",
+      "name": "Send a message3",
+      "webhookId": "2d8d1c0e-1362-4a82-8c7f-b19a5f68e6a4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aQ3FsuquZ3UCrWeS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        1040
+      ],
+      "id": "e969ab5c-a241-4d07-a985-db06ab47392b",
+      "name": "Send a message4",
+      "webhookId": "0ee943ba-2423-4799-a12d-fb3e987301f7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aQ3FsuquZ3UCrWeS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ===============================\n// GET DATA DARI FORM\n// ===============================\nconst formData = $('On form submission1').first().json;\n\n// ===============================\n// GET HISTORY DARI NOTION\n// ===============================\nconst historyItems = $('SP History').all();\n\n// Filter item valid\nconst validHistory = historyItems.filter(\n  item => Object.keys(item.json).length > 0\n);\n\n// ===============================\n// AMBIL NAMA KARYAWAN\n// ===============================\nconst namaKaryawan = formData[\"Nama Karyawan\"] || \"Unknown\";\n\n// Bersihkan nama untuk nomor SP\nconst cleanName = namaKaryawan.replace(/\\s+/g, '');\n\n// ===============================\n// AMBIL SP TERAKHIR\n// ===============================\nlet lastSP = null;\n\nif (validHistory.length > 0) {\n\n  // Ambil record terbaru\n  const latestRecord = validHistory[0].json;\n\n  // Ambil level SP dari Notion\n  lastSP =\n    latestRecord.property_level_sp ||\n    latestRecord.sp_level ||\n    latestRecord.LevelSP ||\n    latestRecord[\"Level SP\"] ||\n    null;\n}\n\n// ===============================\n// TENTUKAN LEVEL SP BERIKUTNYA\n// ===============================\nlet spLevel = '';\nlet spNumber = '';\nlet nextAction = '';\n\nconst timestamp = new Date().getTime();\n\n// Belum pernah kena SP\nif (!lastSP) {\n\n  spLevel = 'SP1';\n  spNumber = `SP1-${cleanName}-${timestamp}`;\n  nextAction = 'create_letter';\n\n// Sudah pernah kena SP1\n} else if (lastSP === 'SP1') {\n\n  spLevel = 'SP2';\n  spNumber = `SP2-${cleanName}-${timestamp}`;\n  nextAction = 'create_letter';\n\n// Sudah pernah kena SP2\n} else if (lastSP === 'SP2') {\n\n  spLevel = 'SP3';\n  spNumber = `SP3-${cleanName}-${timestamp}`;\n  nextAction = 'create_letter';\n\n// Sudah pernah kena SP3\n} else {\n\n  spLevel = 'ESCALATE';\n  spNumber = `ESC-${cleanName}-${timestamp}`;\n  nextAction = 'escalate_to_hr';\n}\n\n// ===============================\n// RETURN DATA\n// ===============================\nreturn {\n  json: {\n\n    // Data form asli\n    ...formData,\n\n    // SP sebelumnya\n    previous_sp: lastSP,\n\n    // SP baru\n    sp_level: spLevel,\n    sp_number: spNumber,\n\n    // Jumlah histori\n    sp_count: validHistory.length,\n\n    // Action berikutnya\n    next_action: nextAction,\n\n    // Tanggal SP\n    tanggal_sp: new Date().toISOString().split('T')[0]\n  }\n};"
+      },
+      "id": "62cb93d9-7c6b-4503-8991-86cb60e78661",
+      "name": "Determine SP Level",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Buatkan isi utama Surat Peringatan (SP) karyawan dalam Bahasa Indonesia formal dan profesional berdasarkan peraturan ketenagakerjaan yang berlaku di Indonesia.\n\nData Pelanggaran:\n- Jenis Pelanggaran: {{ $('On form submission1').item.json['Jenis Pelanggaran'] }}\n- Deskripsi Pelanggaran: {{ $('On form submission1').item.json['Deskripsi Pelanggaran'] }}\n- Level SP: {{ $json.sp_level }}\n\nInstruksi:\n- Fokus hanya membuat isi utama surat peringatan.\n- Jangan membuat:\n  - nama karyawan\n  - jabatan\n  - divisi\n  - nomor surat\n  - tanggal surat\n  - kop perusahaan\n  - salam pembuka identitas\n- Gunakan bahasa HRD perusahaan yang formal, profesional, dan tegas.\n- Isi surat harus menjelaskan:\n  - pelanggaran yang dilakukan\n  - dampak pelanggaran terhadap perusahaan/disiplin kerja\n  - bentuk pembinaan/peringatan\n  - konsekuensi jika pelanggaran diulangi\n- Sesuaikan tingkat ketegasan dengan level SP.\n- Gunakan gaya bahasa resmi perusahaan Indonesia.\n- Hindari membuat informasi yang tidak diberikan.\n- Output hanya isi surat tanpa markdown dan tanpa penjelasan tambahan.",
+        "options": {
+          "systemMessage": "Anda adalah penulis profesional HR dan legal perusahaan Indonesia yang ahli dalam membuat Surat Peringatan (SP) formal. Buat surat yang profesional, resmi, dan sesuai konteks pelanggaran karyawan berdasarkan data yang diberikan.",
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "63163649-de3f-4803-bd67-bafbc14d5ba5",
+      "name": "Generate Warning Letter",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission1').item.json['Email Manajer'] }}",
+        "subject": "=Approval Required: {{ $('Determine SP Level').item.json.sp_level }} - {{ $('On form submission1').item.json['Nama Karyawan'] }}",
+        "message": "=<h2>Surat Peringatan Siap untuk Ditinjau</h2>\n\n<p>Yth. {{ $('On form submission1').item.json['Nama Manajer'] }},</p>\n\n<p>Berikut kami sampaikan surat peringatan karyawan yang telah dibuat secara otomatis dan siap untuk ditinjau serta ditandatangani.</p>\n\n<ul>\n<li><strong>Nama Karyawan:</strong> {{ $('On form submission1').item.json['Nama Karyawan'] }}</li>\n<li><strong>Divisi:</strong> {{ $('On form submission1').item.json.Divisi }}</li>\n<li><strong>Posisi:</strong> {{ $('On form submission1').item.json.Posisi }}</li>\n<li><strong>Jenis Pelanggaran:</strong> {{ $('On form submission1').item.json['Jenis Pelanggaran'] }}</li>\n<li><strong>Level SP:</strong> {{ $('Determine SP Level').item.json.sp_level }}</li>\n<li><strong>Nomor SP:</strong> {{ $('Determine SP Level').item.json.sp_number }}</li>\n<li><strong>Tanggal SP:</strong> {{ $('Determine SP Level').item.json.tanggal_sp }}</li>\n</ul>\n\n<p>Dokumen surat peringatan telah dilampirkan dalam format PDF pada email ini.</p>\n\n<p>Mohon untuk melakukan peninjauan dan persetujuan sesuai prosedur perusahaan.</p>\n\n<br>\n\n<p>Hormat kami,<br>\nSistem HR Otomatis</p>",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "id": "1c3bf0d3-5744-487d-83b7-2c1d58f7d403",
+      "name": "Send to Manager for Approval",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        880
+      ],
+      "webhookId": "e95d9815-1d6c-44fd-a8ac-61c19f93f97d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aQ3FsuquZ3UCrWeS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('SP History').first().json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nama Karyawan|title",
+              "title": "={{ $('On form submission1').item.json['Nama Karyawan'] }}"
+            },
+            {
+              "key": "Divisi|rich_text",
+              "textContent": "={{ $('On form submission1').item.json.Divisi }}"
+            },
+            {
+              "key": "Posisi|rich_text",
+              "textContent": "={{ $('On form submission1').item.json.Posisi }}"
+            },
+            {
+              "key": "Jenis Pelanggaran|rich_text",
+              "textContent": "={{ $('On form submission1').item.json['Jenis Pelanggaran'] }}"
+            },
+            {
+              "key": "Deskripsi Pelanggaran|rich_text",
+              "textContent": "={{ $('On form submission1').item.json['Deskripsi Pelanggaran'] }}"
+            },
+            {
+              "key": "Level SP|select",
+              "selectValue": "={{ $('Determine SP Level').item.json.sp_level }}"
+            },
+            {
+              "key": "Nomor SP|rich_text",
+              "textContent": "={{ $('Determine SP Level').item.json.sp_number }}"
+            },
+            {
+              "key": "Tanggal SP|date",
+              "date": "={{ $('Determine SP Level').item.json.tanggal_sp }}"
+            },
+            {
+              "key": "Status Approval|select",
+              "selectValue": "Disetujui"
+            },
+            {
+              "key": "Email Karyawan|email",
+              "emailValue": "={{ $('On form submission1').item.json['Email Karyawan'] }}"
+            },
+            {
+              "key": "Nama Manajer|rich_text",
+              "textContent": "={{ $('On form submission1').item.json['Nama Manajer'] }}"
+            },
+            {
+              "key": "Email Manajer|email",
+              "emailValue": "={{ $('On form submission1').item.json['Email Manajer'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6433fec8-c5c7-4f05-8a68-7bad24ec92c5",
+      "name": "Log to Notion Database",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('Copy file').item.json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{isi_surat}}",
+              "replaceText": "={{ $('Generate Warning Letter').first().json.output }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{sp_level}}",
+              "replaceText": "={{ $('Determine SP Level').item.json.sp_level }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{tanggal_sp}}",
+              "replaceText": "={{ $('Determine SP Level').item.json.tanggal_sp }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{nama_karyawan}}",
+              "replaceText": "={{ $('On form submission1').item.json['Nama Karyawan'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{posisi}}",
+              "replaceText": "={{ $('On form submission1').item.json.Posisi }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{divisi}}",
+              "replaceText": "={{ $('On form submission1').item.json.Divisi }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{nama_manajer}}",
+              "replaceText": "={{ $('On form submission1').item.json['Nama Manajer'] }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{nomor_sp}}",
+              "replaceText": "={{ $('Determine SP Level').item.json.sp_number }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        944,
+        880
+      ],
+      "id": "74baaac6-fc2b-49e1-b740-d6bc44461b45",
+      "name": "Update a document2",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "aRwRwEDgrAcFlgUW",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://docs.google.com/document/d/' + $('Copy file').item.json.id + '/export?format=pdf' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        880
+      ],
+      "id": "68545476-b45b-4b92-a5a2-47a5aebf981a",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1-OpA7Zg7bLUd5kP64-6s7L_OdMhpVSraUQbFjHPYDnI",
+          "mode": "list",
+          "cachedResultName": "TEMPLATE SURAT (FIX)",
+          "cachedResultUrl": "https://docs.google.com/document/d/1-OpA7Zg7bLUd5kP64-6s7L_OdMhpVSraUQbFjHPYDnI/edit?usp=drivesdk"
+        },
+        "name": "={{ $('Determine SP Level').item.json.sp_level }} - {{ $('On form submission1').item.json['Nama Karyawan'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        752,
+        880
+      ],
+      "id": "bd8f713d-1167-47a3-afab-754a5af1af95",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vwNq12sGlPiY5X4L",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "https://www.notion.so/3d3040f7ce0f826cac7781cd82d1fe4d?v=cc4040f7ce0f82898d11883a0807012b",
+          "mode": "url"
+        },
+        "limit": 10,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Nama Karyawan|title",
+              "condition": "equals",
+              "titleValue": "={{ $json['Nama Karyawan'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "37997c7b-f945-46c6-adb8-6aa8bfa76331",
+      "name": "SP History",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        880
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "formTitle": "Form Pengajuan Surat Pelanggaran",
+        "formDescription": "Silakan isi data pelanggaran karyawan untuk pembuatan Surat Peringatan (SP).",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nama Karyawan",
+              "fieldName": "Nama Karyawan",
+              "placeholder": "isi nama karyawan",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Karyawan",
+              "fieldName": "Email Karyawan",
+              "placeholder": "isi email karyawan"
+            },
+            {
+              "fieldLabel": "Divisi",
+              "fieldName": "Divisi",
+              "placeholder": "isi divisi yang dituju",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Posisi",
+              "fieldName": "Posisi",
+              "placeholder": "isi posisi karyawan tersebut",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Jenis Pelanggaran",
+              "fieldName": "Jenis Pelanggaran",
+              "placeholder": "isi jenis pelanggaran",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Deskripsi Pelanggaran",
+              "fieldName": "Deskripsi Pelanggaran",
+              "placeholder": "isi deskrisi pelanggaran",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Nama Manajer",
+              "fieldName": "Nama Manajer",
+              "placeholder": "isi nama manajer ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Manajer",
+              "fieldType": "dropdown",
+              "fieldName": "Email Manajer",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "jejaklangkah081@gmail.com"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -176,
+        880
+      ],
+      "id": "79e19801-907b-473a-8923-4b2e14ce1ad8",
+      "name": "On form submission1",
+      "webhookId": "1660c105-345c-4f75-a40d-11c24a754942"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        384,
+        1072
+      ],
+      "id": "01667b26-772d-4aff-a317-4836272fe162",
+      "name": "Groq Chat Model1"
+    },
+    {
+      "parameters": {
+        "content": "# Pengajuan SP",
+        "height": 640,
+        "width": 2416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        48
+      ],
+      "id": "40b051c6-f0b1-4c37-852e-181973784162",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "formTitle": "Form Pengajuan Surat Pelanggaran",
+        "formDescription": "Silakan isi data pelanggaran karyawan untuk pembuatan Surat Peringatan (SP).",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nama Karyawan",
+              "fieldName": "Nama Karyawan",
+              "placeholder": "isi nama karyawan",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Karyawan",
+              "fieldName": "Email Karyawan",
+              "placeholder": "isi email karyawan"
+            },
+            {
+              "fieldLabel": "Divisi",
+              "fieldName": "Divisi",
+              "placeholder": "isi divisi yang dituju",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Posisi",
+              "fieldName": "Posisi",
+              "placeholder": "isi posisi karyawan tersebut",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Jenis Pelanggaran",
+              "fieldName": "Jenis Pelanggaran",
+              "placeholder": "isi jenis pelanggaran",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Deskripsi Pelanggaran",
+              "fieldName": "Deskripsi Pelanggaran",
+              "placeholder": "isi deskrisi pelanggaran",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Nama Manajer",
+              "fieldName": "Nama Manajer",
+              "placeholder": "isi nama manajer ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Manajer",
+              "fieldType": "dropdown",
+              "fieldName": "Email Manajer",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "jejaklangkah081@gmail.com"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -1200,
+        336
+      ],
+      "id": "338914e3-06b8-4495-aee6-3a83a7ba72d7",
+      "name": "Form Pengajuan",
+      "webhookId": "02f9c621-af94-45a4-b73f-e372b58744c2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        []
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "SP3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "SP1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SP2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SP3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine SP Level": {
+      "main": [
+        [
+          {
+            "node": "Generate Warning Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Warning Letter": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Manager for Approval": {
+      "main": [
+        [
+          {
+            "node": "Log to Notion Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send to Manager for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Update a document2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SP History": {
+      "main": [
+        [
+          {
+            "node": "Determine SP Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "SP History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Warning Letter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form Pengajuan": {
+      "main": [
+        [
+          {
+            "node": "Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3632819a-19fe-4699-b22c-8c6c0ad1da62",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c6c7c9a62a5e386291ae0b91cdaf7d4e0256d5679a47324ea1d34238b98dc264"
+  },
+  "id": "Sd6V6KGBXMlU2Ayl",
+  "tags": []
+}
